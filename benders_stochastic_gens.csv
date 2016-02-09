@@ -1,0 +1,6 @@
+gen, maxprod, price, uppremium, downpremium, upflex, downflex
+g1, 80, 10, 2, 8, 0.1, 0.1
+g2, 60, 20, 4, 7, 0.15, 0.15
+g3, 40, 30, 6, 6, 0.2, 0.2
+g4, 40, 40, 8, 5, 0.5, 0.5
+g5, 50, 100, 10, 2, 1.0, 1.0
