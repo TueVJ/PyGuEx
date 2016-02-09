@@ -60,6 +60,7 @@ class Benders_Subproblem:
             self.variables.gprod_rt_down[g] = m.addVar(lb=0.0, ub=geninfo.maxprod[g] * geninfo.downflex[g])
 
         self.variables.loadserved = m.addVar(lb=0.0, ub=demandmax)
+        self.variables.loadserved_DA = m.addVar(lb=0.0, ub=gb.GRB.INFINITY)
         self.variables.dumpload = m.addVar(lb=0.0, ub=dumploadmax)
 
         m.update()
@@ -74,7 +75,7 @@ class Benders_Subproblem:
         m.setObjective(
             gb.quicksum((geninfo.price[g] + geninfo.uppremium[g])*self.variables.gprod_rt_up[g] for g in gens) +
             gb.quicksum((- geninfo.price[g] + geninfo.downpremium[g])*self.variables.gprod_rt_down[g] for g in gens) -
-            VOLL*self.variables.loadserved +
+            VOLL*(self.variables.loadserved-self.variables.loadserved_DA) +
             dumploadprice * self.variables.dumpload
         )
 
@@ -98,7 +99,12 @@ class Benders_Subproblem:
                 self.variables.gprod_da[g],
                 gb.GRB.EQUAL,
                 0.0)
+        self.constraints.fixed_load_da = m.addConstr(
+            self.variables.loadserved_DA,
+            gb.GRB.EQUAL,
+            0.0)
 
     def update_fixed_vars(self, MP):
         for g in self.MP.data.generators:
                 self.constraints.fixed_da[g].rhs = MP.variables.gprod_da[g].x
+        self.constraints.fixed_load_da.rhs = MP.variables.load_da.x

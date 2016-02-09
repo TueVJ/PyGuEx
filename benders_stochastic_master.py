@@ -188,10 +188,11 @@ class Benders_Master:
         self.data.cutlist.append(cut)
 
         # Get sensitivities from subproblem
-        sens = {
+        sens_gen = {
             g: sum(self.data.scenarioprobs[s] * self.submodels[s].constraints.fixed_da[g].pi for s in self.data.scenarios)
             for g in gens}
-        self.data.lambdas[cut] = sens
+        self.data.lambdas[cut] = sens_gen
+        sens_load = sum(self.data.scenarioprobs[s] * self.submodels[s].constraints.fixed_load_da.pi for s in self.data.scenarios)
         # Get subproblem objectives)
         z_sub = sum(self.data.scenarioprobs[s] * self.submodels[s].model.ObjVal for s in self.data.scenarios)
         # Generate cut
@@ -199,8 +200,9 @@ class Benders_Master:
             self.variables.alpha,
             gb.GRB.GREATER_EQUAL,
             z_sub +
-            gb.quicksum(sens[g] * self.variables.gprod_da[g] for g in gens) -
-            sum(sens[g] * self.variables.gprod_da[g].x for g in gens)
+            gb.quicksum(sens_gen[g] * self.variables.gprod_da[g] for g in gens) -
+            sum(sens_gen[g] * self.variables.gprod_da[g].x for g in gens) +
+            sens_load * (self.variables.load_da - self.variables.load_da.x)
         )
 
     def _clear_cuts(self):
